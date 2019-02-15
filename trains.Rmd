@@ -1,0 +1,31 @@
+---
+title: "Replication Report on Enos (2014)"
+author: "David Kane"
+date: "2/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(knitr)
+library(tidyverse)
+
+# The raw data does not have a column name for the first column, so, by default
+# it gets X1. But this looks to be just a row number, so let's ignore. 
+
+# The variable names in dat_all and dat_all_prime are just pathetic, as if they
+# are the result of an extremely sloppy merge. What is the difference, for
+# example, between party.x and party.y? The names in dat_t1 are fine.
+
+dat_all <- read_csv("pnas_data.csv")
+dat_t1  <- read_csv("t1_data.csv")
+dat_all_prime <- read_csv("prime_data.csv")
+
+# data loading for faces graphic
+
+conf.dat = read.csv('pnas_dat/confederate_face_data.csv')
+hisp.dat = read.csv('pnas_dat/hispanic_face_data.csv')
+white.dat = read.csv('pnas_dat/white_face_data.csv')
+
+```
+
