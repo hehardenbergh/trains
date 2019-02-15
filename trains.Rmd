@@ -1,13 +1,17 @@
 ---
 title: "Replication Report on Enos (2014)"
 author: "David Kane"
-date: "2/15/2019"
-output: html_document
+date: '2019-02-15'
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(knitr)
+library(RItools)
+library(xtable)
 library(tidyverse)
 
 # The raw data does not have a column name for the first column, so, by default
@@ -17,15 +21,40 @@ library(tidyverse)
 # are the result of an extremely sloppy merge. What is the difference, for
 # example, between party.x and party.y? The names in dat_t1 are fine.
 
-dat_all <- read_csv("pnas_data.csv")
-dat_t1  <- read_csv("t1_data.csv")
-dat_all_prime <- read_csv("prime_data.csv")
+dat.all <- read_csv("pnas_data.csv")
 
-# data loading for faces graphic
+dat.t1  <- read_csv("t1_data.csv") # Only uses for some missing data tests?
 
-conf.dat = read.csv('pnas_dat/confederate_face_data.csv')
-hisp.dat = read.csv('pnas_dat/hispanic_face_data.csv')
-white.dat = read.csv('pnas_dat/white_face_data.csv')
+dat.all.prime <- read_csv("prime_data.csv")
+
+# Ignore the face data for now.
+
+```
+
+## Table 2
+
+```{r table_2, results="asis"}
+# I believe that this is the code which drives Table 2. I deleted the other
+# tests. Note that income is present in the published table but at a different
+# location than in the code. I could not get replicate the income numbers.
+# Error?
+
+out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.disapprove + 
+                               ride.everyday + voted.2010 + romney.voter + Hispanics.x + 
+                               age + residency.new + hispanic.new + college + 
+                               male + white + + income.new , data = dat.all, 
+                             report = c("std.diffs","z.scores","adj.means","chisquare.test"), 
+                             strata = factor(dat.all$station))
+
+# Need to print this out more nicely, including adding some information like n.
+# The object is a weird list. Maybe learn some gt to make it pretty? Most
+# numbers seem spot on.
+
+kable(out.balance.test[1], digits = 2)
+
+```
+
+```{r }
 
 ```
 
