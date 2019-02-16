@@ -13,6 +13,7 @@ library(knitr)
 library(ri)
 library(RItools)
 library(xtable)
+library(car)
 library(tidyverse)
 
 # The raw data does not have a column name for the first column, so, by default
@@ -183,10 +184,12 @@ dat.all.prime$residency.new[dat.all.prime$residency == 6] = mean(dat.all.prime$a
 # English language is reverse coded from other variables:
 
 # Current warning: "Unreplaced values treated as NA as .x is not compatible.
-# Please specify replacements exhaustively or supply .default""
+# Please specify replacements exhaustively or supply .default" I wonder if we
+# are using the same recode()? Note that he never loads dplyr. Ahh! He is using
+# recode from the car package.
 
-dat.all.prime$Englishlan.x = recode(dat.all.prime$Englishlan.x, "5=1; 4=2; 3=3; 2=4; 1=5")
-dat.all.prime$Englishlan.y = recode(dat.all.prime$Englishlan.y, "5=1; 4=2; 2=4; 1=5")
+dat.all.prime$Englishlan.x =  car::recode(dat.all.prime$Englishlan.x, "5=1; 4=2; 3=3; 2=4; 1=5")
+dat.all.prime$Englishlan.y = car::recode(dat.all.prime$Englishlan.y, "5=1; 4=2; 2=4; 1=5")
 
 
 # gender recode
