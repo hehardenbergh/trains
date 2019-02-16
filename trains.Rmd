@@ -150,37 +150,51 @@ final.mat.main = final.mat ##final.mat for output creation later
 
 ```
 
+
+
+
 ```{r primetest}
-##primetest.r
-###use randomization inference to look for changes in responses induced by experiment in subsets by covariates.
-####RdE September 2012
+# This code looks a lot like the code above. Maybe combine them?
+
+# use randomization inference to look for changes in responses induced by
+# experiment in subsets by covariates.
 
 
-#####recodes
-####race variable
+# recodes
+
+# race variable
+
 dat.all.prime$non.white = ifelse(dat.all.prime$race_4 == 1, 1,0)
 dat.all.prime$non.white[is.na(dat.all.prime$non.white)==T] = 0
 
+# Is there a data problem here? I don't think that residency.new is a variable
+# in dat.all.prime. So, this first assignment fails, perhaps just because
+# dat.all.prime is now a tibble. My fix: Just change the first assignment to
+# ifelse to ensure clean creation.
 
-dat.all.prime$residency.new[dat.all.prime$residency == 1] = 1
+dat.all.prime$residency.new <- ifelse(dat.all.prime$residency == 1, 1, NA)
 dat.all.prime$residency.new[dat.all.prime$residency == 2] = 3.5
 dat.all.prime$residency.new[dat.all.prime$residency == 3] = 7.5
 dat.all.prime$residency.new[dat.all.prime$residency == 4] = 12.5
 dat.all.prime$residency.new[dat.all.prime$residency == 5] = mean(dat.all.prime$age, na.rm = T)-15
 dat.all.prime$residency.new[dat.all.prime$residency == 6] = mean(dat.all.prime$age, na.rm = T)
 
-#####recodes
-###English language is reverse coded from other variables:
+# recodes
+# English language is reverse coded from other variables:
+
+# Current warning: "Unreplaced values treated as NA as .x is not compatible.
+# Please specify replacements exhaustively or supply .default""
+
 dat.all.prime$Englishlan.x = recode(dat.all.prime$Englishlan.x, "5=1; 4=2; 3=3; 2=4; 1=5")
 dat.all.prime$Englishlan.y = recode(dat.all.prime$Englishlan.y, "5=1; 4=2; 2=4; 1=5")
 
 
-###gender recode
+# gender recode
+
 dat.all.prime$male = ifelse(dat.all.prime$gender == 1, 1, 0)
 
+# inference
 
-
-###inference
 repeats = c("numberim","Remain","Englishlan")
 
 x.names = paste(repeats,".x",sep="")
@@ -192,7 +206,6 @@ final.mat = matrix(nrow = 0, ncol = 8)
 
 subsets = c('all.prime')
 
-cat('beginning inference \n')
 
 for(subset in subsets){ ##b.only, complier, and non-compler subsets
 	out.mat = matrix(nrow = length(repeats), ncol = 8)
@@ -202,8 +215,8 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
 	z.variable = 'treatment'
 	
 	for(j in 1:length(repeats)){
-		dat.subset$x.new = (as.numeric(dat.subset[,x.names[j]])-1)/4  ##rescale x to 0-1
-		dat.subset$y.new = (as.numeric(dat.subset[,y.names[j]])-1)/4  ##rescale y to 0-1
+	  dat.subset$x.new <- (dat.subset[, x.names[j], drop = TRUE]- 1)/4  ##rescale x to 0-1
+		dat.subset$y.new <- (dat.subset[, y.names[j], drop = TRUE]- 1)/4  ##rescale y to 0-1
 		dat.subset$Y = dat.subset$y.new - dat.subset$x.new
 			
 		dat.use = dat.subset[is.na(dat.subset$Y) == F,]
@@ -213,9 +226,9 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
 		
 		Xs = data.matrix(dat.use[,covariates])
 		
-		perms <- genperms(Z = dat.use[,z.variable])
-		probs = genprobexact(Z = dat.use[,z.variable])
-		ate = estate(Y = dat.use$Y, Z = dat.use[,z.variable], X = Xs, prob = probs)
+		perms <- genperms(Z = dat.use[, z.variable, drop = TRUE])
+		probs = genprobexact(Z = dat.use[, z.variable, drop = TRUE])
+		ate = estate(Y = dat.use$Y, Z = dat.use[, z.variable, drop = TRUE], X = Xs, prob = probs)
 	
 		Ys = genouts(Y = dat.use$Y, Z = dat.use[,z.variable], ate = 0)
 		distout <- gendist(Ys,perms, prob=probs)
