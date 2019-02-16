@@ -56,8 +56,8 @@ dat.all.prime <- read_csv("data/prime_data.csv")
 
 out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.disapprove + 
                                ride.everyday + voted.2010 + romney.voter + Hispanics.x + 
-                               age + residency.new + hispanic.new + college + 
-                               male + white + income.new , data = dat.all, 
+                               age + residency.new + college + male +
+                               hispanic.new +  white + income.new, data = dat.all, 
                              report = c("std.diffs","z.scores","adj.means"), 
                              strata = factor(dat.all$station))
 
@@ -76,9 +76,10 @@ x <- out.balance.test[1]$results[,,1][, 1:4]
 # We have our matrix, but now we need to add row names to it because
 # this is where kable looks for that information.
 
-row.names(x) <- c("Liberal", "Republican", "Obama disapprove", "Ride MBTA every day",
-                  "Voted 2010", "Romney voter", "Hispanic threat", "Age", "Residency year",
-                  "College", "Male", " Hispanic", "White", "Income")
+row.names(x) <- c("Liberal", "Republican", "Obama disapprove", 
+                  "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
+                  "Age", "Residency year", "College", "Male",  
+                  "Hispanic", "White", "Income")
 
 kable(x, digits = 2, 
       caption = "Covariate balance across treatment conditions",
