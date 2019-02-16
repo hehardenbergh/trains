@@ -10,6 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(knitr)
+library(ri)
 library(RItools)
 library(xtable)
 library(tidyverse)
@@ -42,7 +43,7 @@ dat.all.prime <- read_csv("prime_data.csv")
 out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.disapprove + 
                                ride.everyday + voted.2010 + romney.voter + Hispanics.x + 
                                age + residency.new + hispanic.new + college + 
-                               male + white + + income.new , data = dat.all, 
+                               male + white + income.new , data = dat.all, 
                              report = c("std.diffs","z.scores","adj.means","chisquare.test"), 
                              strata = factor(dat.all$station))
 
@@ -57,19 +58,20 @@ kable(out.balance.test[1], digits = 2)
 ```{r table_1}
 # Some comments would be nice!
 
-repeats = c("numberim","Remain","Englishlan")
+repeats <- c("numberim","Remain","Englishlan")
 
-x.names = paste(repeats,".x",sep="")
-y.names = paste(repeats,".y",sep="")
+x.names <- paste(repeats,".x",sep="")
+y.names <- paste(repeats,".y",sep="")
 
-covariates = c('line.x')
+covariates <- c('line.x')
 
 ###treated first
-final.mat = matrix(nrow = 0, ncol = 8)
+final.mat <- matrix(nrow = 0, ncol = 8)
 
-subsets = c('all','no.car')
+subsets <- c('all','no.car')
 
-cat('beginning inference \n')
+# This code is absurd. Not the least is using "subset" --- the name of a base
+# function! --- as a character vector.
 
 
 for(subset in subsets){
@@ -86,19 +88,27 @@ for(subset in subsets){
 		
 	z.variable = 'treatment'
 	
+	# This portion is really tricky because x.new and friends gets created as a
+	# data.frame, which is now just an element of the dat.subset list. That is
+	# weird enough, but then, later, we try to work with it and bad stuff happens.
+	# I suspect that all this is fine if we just never turned the initial data into
+	# a tibble. But maybe not! And, even if it does work, it is a bad idea. Trick
+	# was to add "drop = TRUE", which ensures that the resulting object is a
+	# vector.
+	
 	for(j in 1:length(repeats)){
-		dat.subset$x.new = (as.numeric(dat.subset[,x.names[j]])-1)/4  ##rescale x to 0-1
-		dat.subset$y.new = (as.numeric(dat.subset[,y.names[j]])-1)/4  ##rescale y to 0-1
-		dat.subset$Y = dat.subset$y.new - dat.subset$x.new
+		dat.subset$x.new <- (dat.subset[, x.names[j], drop = TRUE]- 1)/4  ##rescale x to 0-1
+		dat.subset$y.new <- (dat.subset[, y.names[j], drop = TRUE]- 1)/4  ##rescale y to 0-1
+		dat.subset$Y     <-  dat.subset$y.new - dat.subset$x.new
 		
-		dat.use = dat.subset[is.na(dat.subset$Y) == F,]
+		dat.use <- dat.subset[is.na(dat.subset$Y) == F,]
 		
-		x.sd = sd(dat.use$x.new,na.rm = T)
+		x.sd = sd(as.vector(dat.use$x.new),na.rm = T)
 		x.mean = mean(dat.use$x.new,na.rm = T)
 		y.mean = mean(dat.use$y.new,na.rm = T)
 		y.treat = mean(dat.use$y.new[dat.use$treatment==1],na.rm = T)
 	
-		station.treatment.table = table(dat.use$station,dat.use[,z.variable])
+		station.treatment.table <- table(dat.use$station, dat.use[ ,z.variable, drop = TRUE])
 		no.control.stations = names(which(station.treatment.table[,1] == 0))
 		no.treatment.stations = names(which(station.treatment.table[,2] == 0))
 		dat.use = dat.use[!dat.use$station%in%c(no.control.stations,no.treatment.stations),]
@@ -111,8 +121,8 @@ for(subset in subsets){
 		perms <- genperms(Z = dat.use[,z.variable], blockvar=dat.use$station, clustvar=dat.use$treated_unit)
 		probs = genprobexact(Z = dat.use[,z.variable], blockvar=dat.use$station, clustvar=dat.use$treated_unit)
 
-		ate = estate(Y = dat.use$Y, Z = dat.use[,z.variable], X = Xs, prob = probs)
-		Ys = genouts(Y = dat.use$Y, Z = dat.use[,z.variable], ate = 0)
+		ate = estate(Y = dat.use$Y, Z = dat.use[, z.variable, drop = TRUE], X = Xs, prob = probs)
+		Ys = genouts(Y = dat.use$Y, Z = dat.use[, z.variable, drop = TRUE], ate = 0)
 		distout <- gendist(Ys,perms, prob=probs)
 		disp =	dispdist(distout, ate = ate, display.plot = F)
 		
