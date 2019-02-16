@@ -23,11 +23,11 @@ library(tidyverse)
 # are the result of an extremely sloppy merge. What is the difference, for
 # example, between party.x and party.y? The names in dat_t1 are fine.
 
-dat.all <- read_csv("pnas_data.csv")
+dat.all <- read_csv("data/pnas_data.csv")
 
-dat.t1  <- read_csv("t1_data.csv") # Only uses for some missing data tests?
+dat.t1  <- read_csv("data/t1_data.csv") # Only uses for some missing data tests?
 
-dat.all.prime <- read_csv("prime_data.csv")
+dat.all.prime <- read_csv("data/prime_data.csv")
 
 # Ignore the face data for now.
 
@@ -55,6 +55,8 @@ out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.dis
 kable(out.balance.test[1], digits = 2)
 
 ```
+
+
 
 ```{r table_1}
 # Some comments would be nice!
@@ -141,7 +143,7 @@ for(subset in subsets){
 
 final.mat = as.data.frame(final.mat)
 colnames(final.mat) = c('variable','subset','N','ate','greater.p.value','lesser.p.value','x.sd','x.mean')
-print(final.mat)
+
 
 final.mat.main = final.mat ##final.mat for output creation later
 
@@ -154,8 +156,9 @@ final.mat.main = final.mat ##final.mat for output creation later
 
 
 
-```{r primetest}
-# This code looks a lot like the code above. Maybe combine them?
+```{r primetest, message=FALSE, warning=FALSE}
+# This code looks a lot like the code above. Maybe combine them? Can't figure
+# out how to get the messages about maximum iterations to stop printing.
 
 # use randomization inference to look for changes in responses induced by
 # experiment in subsets by covariates.
@@ -209,6 +212,7 @@ final.mat = matrix(nrow = 0, ncol = 8)
 
 subsets = c('all.prime')
 
+# If there is only one value for subsets, then why the loop???
 
 for(subset in subsets){ ##b.only, complier, and non-compler subsets
 	out.mat = matrix(nrow = length(repeats), ncol = 8)
@@ -229,7 +233,11 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
 		
 		Xs = data.matrix(dat.use[,covariates])
 		
-		perms <- genperms(Z = dat.use[, z.variable, drop = TRUE])
+		# genperms() cat's annoying messages. Is there a simple way to stop this
+		# nonsense?
+		
+		perms <-genperms(Z = dat.use[, z.variable, drop = TRUE])
+
 		probs = genprobexact(Z = dat.use[, z.variable, drop = TRUE])
 		ate = estate(Y = dat.use$Y, Z = dat.use[, z.variable, drop = TRUE], X = Xs, prob = probs)
 	
@@ -248,11 +256,12 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
 		out.mat[j,8] = x.mean
 		}
 		final.mat = rbind(final.mat,out.mat)
-		}
+}
+
 	final.mat = as.data.frame(final.mat)
-	colnames(final.mat) = c('variable','subset','N','ate','greater.p.value','lesser.p.value','x.sd','x.mean')
-	print(final.mat)
-	
+	colnames(final.mat) = c('variable','subset','N','ate','greater.p.value',
+	                        'lesser.p.value','x.sd','x.mean')
+
 
 	final.mat.prime = final.mat ##mat for creating output later
 
@@ -262,19 +271,25 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
 
 
 
-```{r output_create}
-#output_create.r
+```{r output_create, results="asis"}
+# Now that we have final.mat.main and final.mat.prime, we can make some nice
+# output.
 	
-# ####create output
- output.vars = c('numberim','Remain','Englishlan')
- var.names = c('Number of immigrants be increased?','Children of undocumented be allowed to stay?','English as official language?')
+
+output.vars = c('numberim','Remain','Englishlan')
+ 
+var.names = c('Number of immigrants be increased?',
+              'Children of undocumented be allowed to stay?',
+              'English as official language?')
 
  
  ##main results
  ##cumalative results output
- final.mat.use = rbind(final.mat.main,final.mat.prime)
+ 
+final.mat.use = rbind(final.mat.main,final.mat.prime)
 
  final.mat.use$greater.p.value = as.numeric(as.character(final.mat.use$greater.p.value)); final.mat.use$lesser.p.value = as.numeric(as.character(final.mat.use$lesser.p.value)); final.mat.use$ate = as.numeric(as.character(final.mat.use$ate)); final.mat.use$x.mean = as.numeric(as.character(final.mat.use$x.mean)); final.mat.use$x.sd = as.numeric(as.character(final.mat.use$x.sd)); final.mat.use$N = as.numeric(as.character(final.mat.use$N))
+ 
  final.mat.use$p.value = final.mat.use$greater.p.value
 
  final.mat.redact = final.mat.use[,c('variable','subset','ate','p.value','x.mean','x.sd','N')]
@@ -305,19 +320,17 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
  
  out.mat = rbind(hs,out.mat)
  
- out.table = xtable(out.mat, digits = 3
-	)
- print(out.table,file = 'cum_results_wide.tex',
-	 floating = FALSE,
-	 include.rownames = FALSE,
-	 include.colnames = FALSE)
+ kable(out.mat, digits = 3)
+ 
 
 
  ##prime results
- out.mat.p = final.mat.redact[final.mat.redact$subset == 'all.prime'&final.mat.redact$variable %in% output.vars,c('ate.new')]
+ 
+ out.mat.p = final.mat.redact[final.mat.redact$subset == 'all.prime' & 
+                                final.mat.redact$variable %in% output.vars, c('ate.new')]
+ 
  Ns = c('N',max(final.mat.redact$N[final.mat.redact$subset=='all.prime']),
-	max(final.mat.redact$N[final.mat.redact$subset=='all'])
-	)
+	max(final.mat.redact$N[final.mat.redact$subset=='all']))
 
  h1 = c('',paste('(',1:2,')',sep = ''))
  h2 = c('','prime experiment','all respondents')
@@ -329,12 +342,9 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
  out.mat = cbind(var.names,out.mat)
  out.mat = rbind(out.mat,Ns)
  out.mat = rbind(hs,out.mat)
- out.table = xtable(out.mat, digits = 3
-	)
- print(out.table,file = 'prime_results_wide.tex',
-	 floating = FALSE,
-	 include.rownames = FALSE,
-	 include.colnames = FALSE)
+ 
+ kable(out.mat, digits = 3)
+ 
 
 ```
 
