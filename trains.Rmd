@@ -4,8 +4,14 @@ author: "David Kane"
 date: '2019-02-15'
 output:
   pdf_document: default
-  html_document: default
+citation_package: natbib
+bibliography: bibliography.bib
 ---
+
+## Abstract
+
+I replicate "Causal effect of intergroup contact on exclusionary attitudes" (@enos2014) using code/data deposited in the Harvard Dataverse (@DVN/DOP4UB_2017). There are two figures and three tables in the original article.  
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -345,6 +351,7 @@ final.mat.use = rbind(final.mat.main,final.mat.prime)
  
  kable(out.mat, digits = 3)
  
-
 ```
 
+
+## References
