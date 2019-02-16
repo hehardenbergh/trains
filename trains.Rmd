@@ -61,30 +61,33 @@ out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.dis
                              report = c("std.diffs","z.scores","adj.means"), 
                              strata = factor(dat.all$station))
 
-# This creates an object of class xbal, which is obviously to annoying to work
-# with since it is also a list with two items. Note that I keep getting weird
-# warnings about "Unknown or uninitialised column: 'non.white'." and for
-# residency.new. But who is trying to use non.white? And residency.new, which is
-# being used in xBalance, seems fine. Weird . . .
+# This creates an object of class xbal, which is obviously too annoying to work
+# with since it is also a list with two items, and the first item is very
+# strange. However, this incantation gets out the matrix of numbers we care
+# about.
 
-# Even worse! There seems to be no way to work with xbal objects. I just want to
-# get out the numbers, but can't figure out a way to do it. Absurd! So far, the
-# best I can do is to just call xtable(), for which xbal provides a method.
+x <- out.balance.test[1]$results[,,1][, 1:4]
 
-xtable(out.balance.test, caption = "Covariate balance across treatment conditions")
+# Enos just uses xtable(), for which xbal provides a method. But it sure does
+# look ugly because xtable() has so few options. So, I am trying kable() ---
+# which is, perhaps, designed to work well with objects that provide xtable
+# methods?
 
-# But this is really ugly and very hard to work with. xtable does not allow you
-# to change row/column names, or do much of anything else. 
+# We have our matrix, but now we need to add row names to it because
+# this is where kable looks for that information.
 
-# Need to print this out more nicely, including adding some information like n.
-# The object is a weird list. Maybe learn some gt to make it pretty? Most
-# numbers seem spot on.
+row.names(x) <- c("Liberal", "Republican", "Obama disapprove", "Ride MBTA every day",
+                  "Voted 2010", "Romney voter", "Hispanic threat", "Age", "Residency year",
+                  "College", "Male", " Hispanic", "White", "Income")
 
-# kable(out.balance.test[1], digits = 2, 
-#       row.names = c("Liberal", "Republican", "Obama disapprove", "Ride MBTA every day",
-#                     "Voted 2010", "Romney voter", "Hispanic threat", "Age", "Residency year",
-#                     "College", "Male", " Hispanic", "White", "Income"),
-#       col.names = c("Condition", "Control", "Treatment", "Standard difference", "Z Score"))
+kable(x, digits = 2, 
+      caption = "Covariate balance across treatment conditions",
+      col.names = c("Control", "Treatment", "Standard difference", "Z Score"))
+
+# Note that I keep getting weird warnings about "Unknown or uninitialised
+# column: 'non.white'." and for residency.new. But who is trying to use
+# non.white? And residency.new, which is being used in xBalance, seems fine.
+# Weird . . .
 
 ```
 
