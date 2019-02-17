@@ -70,7 +70,8 @@ final.mat <- matrix(nrow = 0, ncol = 8)
 subsets <- c('all','no.car')
 
 # This code is absurd. Not the least is using "subset" --- the name of a base
-# function! --- as a character vector.
+# function! --- as a character vector. Worth the hour (or more!) it would take
+# to refactor?
 
 
 for(subset in subsets){
@@ -153,7 +154,8 @@ final.mat.main = final.mat ##final.mat for output creation later
 
 ```{r output_create, results="asis"}
 # OMG! He calculates many (most?) of these numbers as factors! Check out
-# sapply(final.mat.main, class). Then he has to convert to character and then to
+# sapply(final.mat.main, class). (Or is that somehow my fault for using tibbles
+# instead of data frames?) Then he has to convert to character and then to
 # numeric to use them properly. Insanity! But, also, there should be a better
 # way to clean this up.
 
