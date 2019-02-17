@@ -4,9 +4,13 @@ author: "David Kane"
 date: '2019-02-15'
 output:
   pdf_document: default
+  header-includes:
+    - \usepackage[labelformat=empty]{caption}
 citation_package: natbib
 bibliography: bibliography.bib
 ---
+
+<!-- \captionsetup[table]{labelformat=empty} -->
 
 ## Abstract
 
@@ -48,7 +52,7 @@ dat.all.prime <- read_csv("data/prime_data.csv")
 
 ## Table 2
 
-```{r table_2, results="asis"}
+```{r table_2, results="asis", tab.cap = NULL}
 # I believe that this is the code which drives Table 2. I deleted the other
 # tests. Note that income is present in the published table but at a different
 # location than in the code. I could not get replicate the income numbers.
@@ -89,6 +93,9 @@ kable(x, digits = 2,
 # column: 'non.white'." and for residency.new. But who is trying to use
 # non.white? And residency.new, which is being used in xBalance, seems fine.
 # Weird . . .
+
+# Annoying that there is no (easy!) way to get control of the "Table 1:"
+# beginning portion of the caption. Maybe gt makes this easier?
 
 ```
 
@@ -308,78 +315,70 @@ for(subset in subsets){ ##b.only, complier, and non-compler subsets
 
 
 ```{r output_create, results="asis"}
+# OMG! He calculates many (most?) of these numbers as factors! Check out
+# sapply(final.mat.main, class). Then he has to convert to character and then to
+# numeric to use them properly. Insanity! But, also, there should be a better
+# way to clean this up.
+
+final.mat.main$ate    <- as.numeric(as.character(final.mat.main$ate)) 
+final.mat.main$N      <- as.numeric(as.character(final.mat.main$N)) 
+final.mat.main$x.mean <- as.numeric(as.character(final.mat.main$x.mean)) 
+final.mat.main$x.sd   <- as.numeric(as.character(final.mat.main$x.sd)) 
+final.mat.main$greater.p.value <- as.numeric(as.character(final.mat.main$greater.p.value)) 
+
 # Now that we have final.mat.main and final.mat.prime, we can make some nice
-# output.
-	
+# output. The annoying part is that this data is very poorly organized, if our
+# main purpose is to create Table 1. I really ought to go back and recalculate
+# these data frames in a tidyier fashion. But, for now, we will just pick out
+# the parts we want.
 
-output.vars = c('numberim','Remain','Englishlan')
- 
-var.names = c('Number of immigrants be increased?',
-              'Children of undocumented be allowed to stay?',
-              'English as official language?')
+# This was annoyingly hard, which goes to show why it is nice to calculate
+# important numbers in a sensible way in the first place.
 
- 
- ##main results
- ##cumalative results output
- 
-final.mat.use = rbind(final.mat.main,final.mat.prime)
+ate_tib <- as_tibble(x = matrix(data = NA_real_, 
+                                nrow = 4, 
+                                ncol = 3,
+                                dimnames = list(NULL,
+                                  c("ATE (P)", 
+                                    "CATE (P)",
+                                     "T1 levels (SD)")))) %>%
+  
+  # Remember: tibbles can't have row names anymore. So, we need to make them a
+  # variable.
+  
+  mutate(Question = c('Number of immigrants be increased?',
+                      'Children of undocumented be allowed to stay?',
+                      'English as official language?', 
+                      'n')) %>% 
+  mutate(`ATE (P)` = c(final.mat.main$ate[1:3], final.mat.main$N[2]),
+         `CATE (P)` = c(final.mat.main$ate[4:6], final.mat.main$N[5]),
+         `T1 levels (SD)` = c(final.mat.main$x.mean[1:3], final.mat.main$N[2])) %>% 
+  select(Question, everything())
 
- final.mat.use$greater.p.value = as.numeric(as.character(final.mat.use$greater.p.value)); final.mat.use$lesser.p.value = as.numeric(as.character(final.mat.use$lesser.p.value)); final.mat.use$ate = as.numeric(as.character(final.mat.use$ate)); final.mat.use$x.mean = as.numeric(as.character(final.mat.use$x.mean)); final.mat.use$x.sd = as.numeric(as.character(final.mat.use$x.sd)); final.mat.use$N = as.numeric(as.character(final.mat.use$N))
- 
- final.mat.use$p.value = final.mat.use$greater.p.value
+# Do the p-values
 
- final.mat.redact = final.mat.use[,c('variable','subset','ate','p.value','x.mean','x.sd','N')]
- final.mat.redact[,c('ate','p.value','x.mean','x.sd')] = round(final.mat.redact[,c('ate','p.value','x.mean','x.sd')],3)
+p_tib <- as_tibble(x = matrix(data = NA_real_, 
+                                nrow = 3, 
+                                ncol = 3,
+                                dimnames = list(NULL,
+                                  c("ATE (P)", 
+                                    "CATE (P)",
+                                     "T1 levels (SD)")))) %>% 
+    mutate(Question = c('Number of immigrants be increased?',
+                      'Children of undocumented be allowed to stay?',
+                      'English as official language?')) %>% 
+    mutate(`ATE (P)` = final.mat.main$greater.p.value[1:3],
+         `CATE (P)` = final.mat.main$greater.p.value[4:6],
+         `T1 levels (SD)` = final.mat.main$x.sd[1:3]) %>% 
+  select(Question, everything())
 
- final.mat.redact$ate.new = paste(final.mat.redact$ate,' (',final.mat.redact$p.value,')',sep='')
- final.mat.redact$x.mean.new = paste(final.mat.redact$x.mean,' (',final.mat.redact$x.sd,')',sep='')
+# For now, I am not going to combine these into a single table.
 
- out.mat.a = final.mat.redact[final.mat.redact$subset == 'all'&final.mat.redact$variable %in% output.vars,]
+kable(ate_tib, digits = 3)
 
- out.mat.a = final.mat.redact[final.mat.redact$subset == 'all'&final.mat.redact$variable %in% output.vars,c('ate.new')]	
- out.mat.c = final.mat.redact[final.mat.redact$subset == 'no.car'&final.mat.redact$variable %in% output.vars,c('ate.new')]
- out.mat.x = final.mat.redact[final.mat.redact$subset == 'all'&final.mat.redact$variable %in% output.vars,c('x.mean.new')]
- Ns = c('N',max(final.mat.redact$N[final.mat.redact$subset=='all']),
-	max(final.mat.redact$N[final.mat.redact$subset=='no.car']),
-	max(final.mat.redact$N[final.mat.redact$subset=='all'])
-	)
+kable(p_tib, digits = 3)
+  
 
- h1 = c('',paste('(',1:3,')',sep = ''))
- h2 = c('','all respondents','waits on platform','all respondents')
- h3 = c('question','ATE (p)','CATE (p)','T1 levels (sd)')
- hs = rbind(h1,h2,h3)
- row.names(hs) = NULL
-	
- out.mat = cbind(out.mat.a,cbind(out.mat.c,out.mat.x))
- out.mat = cbind(var.names,out.mat)
- out.mat = rbind(out.mat,Ns)
- 
- out.mat = rbind(hs,out.mat)
- 
- kable(out.mat, digits = 3)
- 
-
-
- ##prime results
- 
- out.mat.p = final.mat.redact[final.mat.redact$subset == 'all.prime' & 
-                                final.mat.redact$variable %in% output.vars, c('ate.new')]
- 
- Ns = c('N',max(final.mat.redact$N[final.mat.redact$subset=='all.prime']),
-	max(final.mat.redact$N[final.mat.redact$subset=='all']))
-
- h1 = c('',paste('(',1:2,')',sep = ''))
- h2 = c('','prime experiment','all respondents')
- h3 = c('question','ATE (p)','ATE (p)')	
- hs = rbind(h1,h2,h3)
- row.names(hs) = NULL
-	
- out.mat = cbind(out.mat.p,out.mat.a)
- out.mat = cbind(var.names,out.mat)
- out.mat = rbind(out.mat,Ns)
- out.mat = rbind(hs,out.mat)
- 
- kable(out.mat, digits = 3)
  
 ```
 
