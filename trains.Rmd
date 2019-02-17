@@ -8,8 +8,6 @@ citation_package: natbib
 bibliography: bibliography.bib
 ---
 
-Add n row to Table 2.
-
 
 ## Abstract
 
@@ -206,6 +204,11 @@ as_tibble(x = matrix(data = NA_real_,
              V2 = "CATE (P)",
              V3 = "T1 levels (SD)") %>% 
   
+  cols_move(columns = vars(V3), after = vars(question)) %>% 
+  
+  tab_spanner(label = "All respondents",   columns = vars(V1, V3)) %>% 
+  tab_spanner(label = "Waits on platform", columns = vars(V2)) %>% 
+
   tab_source_note(source_note = 'In the first "All respondents" column, ATE represents responses in T2-T1 for the treatment group compared with the control group for the entire experimental sample. Positive values mean a more politically conservative response. In the "Waits on platform" column, CATEs are the Conditional Average Treatment Effects for persons who said they stand on the platform, rather than wait in their cars. In the second "All respondents" column, T1 levls and SDs for each variable for all respondents. All variables are scaled 0--1.') %>% 
   
   tab_options(footnote.glyph = c("*", "&dagger;")) %>%   
