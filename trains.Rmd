@@ -3,18 +3,19 @@ title: "Replication Report on Enos (2014)"
 author: "David Kane"
 date: '2019-02-15'
 output:
-  pdf_document: default
-  header-includes:
-    - \usepackage[labelformat=empty]{caption}
+  html_document: default
 citation_package: natbib
 bibliography: bibliography.bib
 ---
 
-<!-- \captionsetup[table]{labelformat=empty} -->
+Get rid of recode and associated car package.
+Start using gt.
+Make a single table 1.
+
 
 ## Abstract
 
-I replicate "Causal effect of intergroup contact on exclusionary attitudes" (@enos2014) using code/data deposited in the Harvard Dataverse (@DVN/DOP4UB_2017). There are two figures and three tables in the original article.  
+I replicate "Causal effect of intergroup contact on exclusionary attitudes" (@enos2014) using code/data deposited in the Harvard Dataverse (@DVN/DOP4UB_2017). There are two figures and three tables in the original article. Tables 1 and 2 can be, almost, perfectly replicated. Table 3 and the two figures can not be replicated from the code/data on deposit at the Dataverse.  
 
 
 ```{r setup, include=FALSE}
@@ -46,12 +47,13 @@ dat.t1  <- read_csv("data/t1_data.csv") # Only uses for some missing data tests?
 
 dat.all.prime <- read_csv("data/prime_data.csv")
 
-# Other data sets only seem relevant for supplementary material.
+# Other data sets only seem relevant for supplementary material . . .
 
 ```
 
 ## Table 1. Experiment results
 
+I am able to replicate all the numbers from Table 1. For convenience, I have placed the mean estimates and the p-values in separate tables below. One clarification is that the values for *n* are somewhat misleading. *n* varies across the questions. For example, *n* for the question about "English as official language?" is 109, as stated. But the *n* for "Number of immigrants be increased" is only 106. It is, obviously, sloppy to list a single *n* when, in fact, *n* varies across questions. The same issue arises with regard to the subset of commuters who wait in the platform. The *n* for "Number of immigrants be increased" is only 98, as compared to the stated 100 for the other two questions. This is a minor point with no meaningful implication for the results.
 
 ```{r table_1}
 # Some comments would be nice!
@@ -210,13 +212,15 @@ p_tib <- as_tibble(x = matrix(data = NA_real_,
 
 # For now, I am not going to combine these into a single table.
 
-kable(ate_tib, digits = 3)
+# Discuss the confusion about exactly what those numbers mean. Does a high
+# number mean the conservative answer?
 
-kable(p_tib, digits = 3)
-  
+ate_tib %>% gt() %>% as_raw_html() %>% as.character() %>% cat()
+p_tib %>% gt() %>% as_raw_html() %>% as.character() %>% cat()
 
- 
 ```
+
+\newpage
 
 ## Table 2. Covariate balance across treatment conditions
 
@@ -236,37 +240,43 @@ out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.dis
 # This creates an object of class xbal, which is obviously too annoying to work
 # with since it is also a list with two items, and the first item is very
 # strange. However, this incantation gets out the matrix of numbers we care
-# about.
+# about. Is there a better way?
 
-x <- out.balance.test[1]$results[,,1][, 1:4]
+x <- as_tibble(out.balance.test[1]$results[,,1][, 1:4]) %>% 
+  mutate(condition = c("Liberal", "Republican", "Obama disapprove", 
+                  "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
+                   "Age", "Residency year", "College", "Male",  
+                   "Hispanic", "White", "Income")) %>% 
+  select(condition, everything())
+
+colnames(x) <- c("Condition", "Control", "Treatment", "Standard difference", "Z Score")
+
 
 # Enos just uses xtable(), for which xbal provides a method. But it sure does
-# look ugly because xtable() has so few options. So, I am trying kable() ---
-# which is, perhaps, designed to work well with objects that provide xtable
-# methods?
+# look ugly because xtable() has so few options. I will use gt.
 
-# We have our matrix, but now we need to add row names to it because
-# this is where kable looks for that information.
+# https://gt.rstudio.com/articles/creating-display-tables.html
 
-row.names(x) <- c("Liberal", "Republican", "Obama disapprove", 
-                  "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
-                  "Age", "Residency year", "College", "Male",  
-                  "Hispanic", "White", "Income")
+gt_tbl <- x %>% 
+  gt() %>% 
+  tab_header(title = "Table 2. Covariate balance across treatment conditions") %>% 
+  tab_options(footnote.glyph = c("*", "**")) %>%   # Really want the second symbol to be a dagger 
+  tab_footnote(
+    footnote = "Difference in standardized units.",
+    locations = cells_column_labels(
+      columns = vars(`Standard difference`))) %>% 
+  tab_footnote(
+    footnote = "Mean response values for the pretreatment variables accounting for stratification into train stations.",
+    locations = cells_data(
+      columns = vars(Condition),
+      rows = 1)) 
 
-kable(x, 
-      digits = 2, 
-      col.names = c("Control", "Treatment", "Standard difference", "Z Score"))
+gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
 
-# Note that I keep getting weird warnings about "Unknown or uninitialised
-# column: 'non.white'." and for residency.new. But who is trying to use
-# non.white? And residency.new, which is being used in xBalance, seems fine.
-# Weird . . .
-
-# Annoying that there is no (easy!) way to get control of the "Table 1:"
-# beginning portion of the caption. Maybe gt makes this easier?
 
 ```
 
+I am able to replicate all the results for Table 2, except for those related to income. But, even there, my results are very close to those published.
 
 
 ## References
