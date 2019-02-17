@@ -28,9 +28,9 @@ library(tidyverse)
 # The raw data does not have a column name for the first column, so, by default
 # it gets X1. But this looks to be just a row number, so let's ignore. 
 
-# The variable names in dat_all and dat_all_prime are just pathetic, as if they
-# are the result of an extremely sloppy merge. What is the difference, for
-# example, between party.x and party.y? The names in dat_t1 are fine.
+# The variable names in dat_all are just pathetic, as if they are the result of
+# an extremely sloppy merge. What is the difference, for example, between
+# party.x and party.y?
 
 # Using read_csv() causes lots of problems later one because dat.all, for
 # example, as a tibble behaves differently than dat.all as a data frame. The key
@@ -40,17 +40,14 @@ library(tidyverse)
 
 dat.all <- read_csv("data/pnas_data.csv")
 
-dat.t1  <- read_csv("data/t1_data.csv") # Only uses for some missing data tests?
-
-dat.all.prime <- read_csv("data/prime_data.csv")
-
-# Other data sets only seem relevant for supplementary material . . .
+# There are several other csv files but, as best I can tell, they are only
+# relevant to the supplementary materials.
 
 ```
 
 ## Table 1. Experiment results
 
-I am able to replicate all the numbers from Table 1. For convenience, I have placed the mean estimates and the p-values in separate tables below. One clarification is that the values for *n* are somewhat misleading. *n* varies across the questions. For example, *n* for the question about "English as official language?" is 109, as stated. But the *n* for "Number of immigrants be increased" is only 106. It is, obviously, sloppy to list a single *n* when, in fact, *n* varies across questions. The same issue arises with regard to the subset of commuters who wait in the platform. The *n* for "Number of immigrants be increased" is only 98, as compared to the stated 100 for the other two questions. This is a minor point with no meaningful implication for the results.
+I am able to replicate all the numbers from Table 1. One clarification is that the values for *n* are somewhat misleading. *n* varies across the questions. For example, *n* for the question about "English as official language?" is 109, as stated. But the *n* for "Number of immigrants be increased" is only 106. It is, obviously, sloppy to list a single *n* when, in fact, *n* varies across questions. The same issue arises with regard to the subset of commuters who wait in the platform. The *n* for "Number of immigrants be increased" is only 98, as compared to the stated 100 for the other two questions. This is a minor point with no meaningful implication for the results.
 
 ```{r table_1}
 # Some comments would be nice!
@@ -141,10 +138,6 @@ colnames(final.mat) = c('variable','subset','N','ate','greater.p.value','lesser.
 
 
 final.mat.main = final.mat ##final.mat for output creation later
-
-# Need more stuff before we can output the final table. Let's come back to this
-# later. I am skipping subset_inference.r since it only (?) produces results for
-# the supporting material.
 
 ```
 
@@ -264,10 +257,13 @@ out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.dis
 # Once I have the data, I add a labelling var before getting to gt.
 
 x <- as_tibble(out.balance.test[1]$results[,,1][, 1:4]) %>% 
+  
+  add_row(`treatment=0` = 117, `treatment=1` = 103) %>% 
+  
   mutate(condition = c("Liberal", "Republican", "Obama disapprove", 
                   "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
                    "Age", "Residency year", "College", "Male",  
-                   "Hispanic", "White", "Income"))
+                   "Hispanic", "White", "Income", "n"))
 
 
 # Enos just uses xtable(), for which xbal provides a method. But it sure does
@@ -302,7 +298,8 @@ gt_tbl <- x %>%
              decimals = 2) %>% 
   fmt_number(columns = vars(`treatment=0`, `treatment=1`),
              decimals = 0,
-             rows = 14) %>% 
+             rows = c(14, 15)) %>% 
+  fmt_missing(columns = vars(std.diff, z), rows = 15, missing_text = "") %>% 
   
   # Take care of the footnotes. 
   
@@ -320,7 +317,6 @@ gt_tbl <- x %>%
       rows = 1)) 
 
 gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
-
 
 ```
 
