@@ -156,8 +156,9 @@ final.mat.main = final.mat ##final.mat for output creation later
 # OMG! He calculates many (most?) of these numbers as factors! Check out
 # sapply(final.mat.main, class). (Or is that somehow my fault for using tibbles
 # instead of data frames?) Then he has to convert to character and then to
-# numeric to use them properly. Insanity! But, also, there should be a better
-# way to clean this up.
+# numeric to use them properly. Insanity! 
+
+# But, also, there should be a better way to clean this up.
 
 final.mat.main$ate    <- as.numeric(as.character(final.mat.main$ate)) 
 final.mat.main$N      <- as.numeric(as.character(final.mat.main$N)) 
@@ -165,59 +166,61 @@ final.mat.main$x.mean <- as.numeric(as.character(final.mat.main$x.mean))
 final.mat.main$x.sd   <- as.numeric(as.character(final.mat.main$x.sd)) 
 final.mat.main$greater.p.value <- as.numeric(as.character(final.mat.main$greater.p.value)) 
 
-# Now that we have final.mat.main and final.mat.prime, we can make some nice
-# output. The annoying part is that this data is very poorly organized, if our
-# main purpose is to create Table 1. I really ought to go back and recalculate
-# these data frames in a tidyier fashion. But, for now, we will just pick out
-# the parts we want.
+# Now that we have final.mat.main, we can make some nice output. The annoying
+# part is that this data is very poorly organized, if our main purpose is to
+# create Table 1. I really ought to go back and recalculate these data frames in
+# a tidyier fashion. But, for now, we will just pick out the parts we want.
 
 # This was annoyingly hard, which goes to show why it is nice to calculate
-# important numbers in a sensible way in the first place.
+# important numbers in a sensible way in the first place. Main trick is to
+# create something of a convenient size, fill in the numbers and then start
+# tabling. Must be easier ways to do this.
 
-ate_tib <- as_tibble(x = matrix(data = NA_real_, 
-                                nrow = 4, 
-                                ncol = 3,
-                                dimnames = list(NULL,
-                                  c("ATE (P)", 
-                                    "CATE (P)",
-                                     "T1 levels (SD)")))) %>%
+as_tibble(x = matrix(data = NA_real_, 
+                     nrow = 4, 
+                     ncol = 6,
+                     dimnames = list(NULL, paste0("V", 1:6)))) %>%  
   
   # Remember: tibbles can't have row names anymore. So, we need to make them a
   # variable.
   
-  mutate(Question = c('Number of immigrants be increased?',
+  mutate(question = c('Number of immigrants be increased?',
                       'Children of undocumented be allowed to stay?',
                       'English as official language?', 
                       'n')) %>% 
-  mutate(`ATE (P)` = c(final.mat.main$ate[1:3], final.mat.main$N[2]),
-         `CATE (P)` = c(final.mat.main$ate[4:6], final.mat.main$N[5]),
-         `T1 levels (SD)` = c(final.mat.main$x.mean[1:3], final.mat.main$N[2])) %>% 
-  select(Question, everything())
+  mutate(V1 = c(final.mat.main$ate[1:3], final.mat.main$N[2]),
+         V2 = c(final.mat.main$ate[4:6], final.mat.main$N[5]),
+         V3 = c(final.mat.main$x.mean[1:3], final.mat.main$N[2]),
+         V4 = c(final.mat.main$greater.p.value[1:3], NA),
+         V5 = c(final.mat.main$greater.p.value[4:6], NA),
+         V6 = c(final.mat.main$x.sd[1:3], NA)) %>% 
 
-# Do the p-values
+  #  Start charting!
 
-p_tib <- as_tibble(x = matrix(data = NA_real_, 
-                                nrow = 3, 
-                                ncol = 3,
-                                dimnames = list(NULL,
-                                  c("ATE (P)", 
-                                    "CATE (P)",
-                                     "T1 levels (SD)")))) %>% 
-    mutate(Question = c('Number of immigrants be increased?',
-                      'Children of undocumented be allowed to stay?',
-                      'English as official language?')) %>% 
-    mutate(`ATE (P)` = final.mat.main$greater.p.value[1:3],
-         `CATE (P)` = final.mat.main$greater.p.value[4:6],
-         `T1 levels (SD)` = final.mat.main$x.sd[1:3]) %>% 
-  select(Question, everything())
+  gt() %>% 
+  tab_header(title = "Table 1. Experiment results") %>% 
+  
+  cols_move_to_start(columns = vars(question)) %>% 
+  
+  fmt_number(columns = starts_with("V"), decimals = 3, drop_trailing_zeros = TRUE) %>%
+  
+  # Combine the columns.
+  
+  cols_merge(col_1 = vars(V1), col_2 = vars(V4), pattern = "{1} ({2})") %>% 
+  cols_merge(col_1 = vars(V2), col_2 = vars(V5), pattern = "{1} ({2})") %>% 
+  cols_merge(col_1 = vars(V3), col_2 = vars(V6), pattern = "{1} ({2})") %>% 
+  
+  cols_label(question =  "Question",        
+             V1 = "ATE (P)",
+             V2 = "CATE (P)",
+             V3 = "T1 levels (SD)") %>% 
 
-# For now, I am not going to combine these into a single table.
+  
+  as_raw_html() %>% as.character() %>% cat()
 
 # Discuss the confusion about exactly what those numbers mean. Does a high
 # number mean the conservative answer?
 
-ate_tib %>% gt() %>% as_raw_html() %>% as.character() %>% cat()
-p_tib %>% gt() %>% as_raw_html() %>% as.character() %>% cat()
 
 ```
 
