@@ -50,55 +50,7 @@ dat.all.prime <- read_csv("data/prime_data.csv")
 
 ```
 
-## Table 2
-
-```{r table_2, results="asis", tab.cap = NULL}
-# I believe that this is the code which drives Table 2. I deleted the other
-# tests. Note that income is present in the published table but at a different
-# location than in the code. I could not get replicate the income numbers.
-# Error?
-
-out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.disapprove + 
-                               ride.everyday + voted.2010 + romney.voter + Hispanics.x + 
-                               age + residency.new + college + male +
-                               hispanic.new +  white + income.new, data = dat.all, 
-                             report = c("std.diffs","z.scores","adj.means"), 
-                             strata = factor(dat.all$station))
-
-# This creates an object of class xbal, which is obviously too annoying to work
-# with since it is also a list with two items, and the first item is very
-# strange. However, this incantation gets out the matrix of numbers we care
-# about.
-
-x <- out.balance.test[1]$results[,,1][, 1:4]
-
-# Enos just uses xtable(), for which xbal provides a method. But it sure does
-# look ugly because xtable() has so few options. So, I am trying kable() ---
-# which is, perhaps, designed to work well with objects that provide xtable
-# methods?
-
-# We have our matrix, but now we need to add row names to it because
-# this is where kable looks for that information.
-
-row.names(x) <- c("Liberal", "Republican", "Obama disapprove", 
-                  "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
-                  "Age", "Residency year", "College", "Male",  
-                  "Hispanic", "White", "Income")
-
-kable(x, digits = 2, 
-      caption = "Covariate balance across treatment conditions",
-      col.names = c("Control", "Treatment", "Standard difference", "Z Score"))
-
-# Note that I keep getting weird warnings about "Unknown or uninitialised
-# column: 'non.white'." and for residency.new. But who is trying to use
-# non.white? And residency.new, which is being used in xBalance, seems fine.
-# Weird . . .
-
-# Annoying that there is no (easy!) way to get control of the "Table 1:"
-# beginning portion of the caption. Maybe gt makes this easier?
-
-```
-
+## Table 1. Experiment results
 
 
 ```{r table_1}
@@ -265,6 +217,56 @@ kable(p_tib, digits = 3)
 
  
 ```
+
+## Table 2. Covariate balance across treatment conditions
+
+```{r table_2, results="asis", tab.cap = NULL}
+# I believe that this is the code which drives Table 2. I deleted the other
+# tests. Note that income is present in the published table but at a different
+# location than in the code. I could not get replicate the income numbers.
+# Error?
+
+out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.disapprove + 
+                               ride.everyday + voted.2010 + romney.voter + Hispanics.x + 
+                               age + residency.new + college + male +
+                               hispanic.new +  white + income.new, data = dat.all, 
+                             report = c("std.diffs","z.scores","adj.means"), 
+                             strata = factor(dat.all$station))
+
+# This creates an object of class xbal, which is obviously too annoying to work
+# with since it is also a list with two items, and the first item is very
+# strange. However, this incantation gets out the matrix of numbers we care
+# about.
+
+x <- out.balance.test[1]$results[,,1][, 1:4]
+
+# Enos just uses xtable(), for which xbal provides a method. But it sure does
+# look ugly because xtable() has so few options. So, I am trying kable() ---
+# which is, perhaps, designed to work well with objects that provide xtable
+# methods?
+
+# We have our matrix, but now we need to add row names to it because
+# this is where kable looks for that information.
+
+row.names(x) <- c("Liberal", "Republican", "Obama disapprove", 
+                  "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
+                  "Age", "Residency year", "College", "Male",  
+                  "Hispanic", "White", "Income")
+
+kable(x, 
+      digits = 2, 
+      col.names = c("Control", "Treatment", "Standard difference", "Z Score"))
+
+# Note that I keep getting weird warnings about "Unknown or uninitialised
+# column: 'non.white'." and for residency.new. But who is trying to use
+# non.white? And residency.new, which is being used in xBalance, seems fine.
+# Weird . . .
+
+# Annoying that there is no (easy!) way to get control of the "Table 1:"
+# beginning portion of the caption. Maybe gt makes this easier?
+
+```
+
 
 
 ## References
