@@ -9,7 +9,7 @@ bibliography: bibliography.bib
 ---
 
 Get rid of recode and associated car package.
-Start using gt.
+
 Make a single table 1.
 
 
@@ -222,7 +222,9 @@ p_tib %>% gt() %>% as_raw_html() %>% as.character() %>% cat()
 
 \newpage
 
-## Table 2. Covariate balance across treatment conditions
+## Table 2
+
+I am able to replicate all the values for Table 2, except for those related to income. But, even there, my results are very close to those published.
 
 ```{r table_2, results="asis", tab.cap = NULL}
 # I believe that this is the code which drives Table 2. I deleted the other
@@ -242,6 +244,8 @@ out.balance.test <- xBalance(fmla = treatment ~ liberal + republican + obama.dis
 # strange. However, this incantation gets out the matrix of numbers we care
 # about. Is there a better way?
 
+# Once I have the data, I then do some set up before going to gt.
+
 x <- as_tibble(out.balance.test[1]$results[,,1][, 1:4]) %>% 
   mutate(condition = c("Liberal", "Republican", "Obama disapprove", 
                   "Ride MBTA every day", "Voted 2010", "Romney voter", "Hispanic threat", 
@@ -249,26 +253,52 @@ x <- as_tibble(out.balance.test[1]$results[,,1][, 1:4]) %>%
                    "Hispanic", "White", "Income")) %>% 
   select(condition, everything())
 
-colnames(x) <- c("Condition", "Control", "Treatment", "Standard difference", "Z Score")
-
 
 # Enos just uses xtable(), for which xbal provides a method. But it sure does
 # look ugly because xtable() has so few options. I will use gt.
 
 # https://gt.rstudio.com/articles/creating-display-tables.html
 
+# I should do everything with gt going forward. It is obviously the future of
+# table making in R. Are they working on regression displays? Still not sure how
+# to use gt_preview() interactively.
+
 gt_tbl <- x %>% 
   gt() %>% 
   tab_header(title = "Table 2. Covariate balance across treatment conditions") %>% 
-  tab_options(footnote.glyph = c("*", "**")) %>%   # Really want the second symbol to be a dagger 
+  
+  # Set column names. Note that you need to use the original variable names in
+  # functions like tab_footnote() even though we call those functions after
+  # setting the column names. In other words, these are just for display, they
+  # don't effect the data we are passing through the pipe.
+  
+  cols_label(condition =  "Condition",        
+             `treatment=0` = "Control",
+             `treatment=1` = "Treatment",
+             std.diff = "Standard difference",       
+             z = "Z Score") %>% 
+  
+  # Get the formatting correct.
+  
+  fmt_number(columns = vars(`treatment=0`, `treatment=1`, std.diff, z),
+             decimals = 2) %>% 
+  fmt_number(columns = vars(`treatment=0`, `treatment=1`),
+             decimals = 0,
+             rows = 14) %>% 
+  
+  # Take care of the footnotes. Really want the second symbol to be a "dagger."
+  
+  tab_options(footnote.glyph = c("*", "**")) %>%   
+  
   tab_footnote(
     footnote = "Difference in standardized units.",
     locations = cells_column_labels(
-      columns = vars(`Standard difference`))) %>% 
+      columns = vars(std.diff))) %>% 
+  
   tab_footnote(
-    footnote = "Mean response values for the pretreatment variables accounting for stratification into train stations.",
+    footnote = "Mean response values for the pretreatment variables accounting for stratification into train stations. All variables are 0 and 1 variables, except for Hispanic threat, which is a seven-point scale indicating how threatening respondents find Hispanics, recoded 0--1; residency, which is measured in years; and income, which is annual income in dollars.",
     locations = cells_data(
-      columns = vars(Condition),
+      columns = vars(condition),
       rows = 1)) 
 
 gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
@@ -276,7 +306,7 @@ gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
 
 ```
 
-I am able to replicate all the results for Table 2, except for those related to income. But, even there, my results are very close to those published.
+
 
 
 ## References
