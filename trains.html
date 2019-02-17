@@ -193,7 +193,6 @@ $(document).ready(function () {
 
 
 <p>Add n row to Table 2.</p>
-<p>Make a single table 1.</p>
 <div id="abstract" class="section level2">
 <h2>Abstract</h2>
 <p>I replicate “Causal effect of intergroup contact on exclusionary attitudes” (<span class="citation">R. D. Enos (2014)</span>) using code/data deposited in the Harvard Dataverse (<span class="citation">R. Enos (2017)</span>). There are two figures and three tables in the original article. Tables 1 and 2 can be, almost, perfectly replicated. Table 3 and the two figures can not be replicated from the code/data on deposit at the Dataverse.</p>
@@ -219,7 +218,7 @@ Table 1. Experiment results
 Question
 </th>
 <th style="color:#000000;background-color:#FFFFFF;font-size:16px;font-weight:initial;vertical-align:middle;padding:10px;margin:10px;text-align:right;font-variant-numeric:tabular-nums;" rowspan="1" colspan="1">
-ATE (P)
+ATE (P)<sup style="font-style:italic;font-size:65%;">*</sup>
 </th>
 <th style="color:#000000;background-color:#FFFFFF;font-size:16px;font-weight:initial;vertical-align:middle;padding:10px;margin:10px;text-align:right;font-variant-numeric:tabular-nums;" rowspan="1" colspan="1">
 CATE (P)
@@ -231,7 +230,7 @@ T1 levels (SD)
 <tbody style="border-top-style:solid;border-top-width:2px;border-top-color:#A8A8A8;border-bottom-style:solid;border-bottom-width:2px;border-bottom-color:#A8A8A8;">
 <tr>
 <td style="padding:10px;margin:10px;vertical-align:middle;text-align:left;">
-Number of immigrants be increased?
+Number of immigrants be increased?<sup style="font-style:italic;font-size:65%;">†</sup>
 </td>
 <td style="padding:10px;margin:10px;vertical-align:middle;text-align:right;font-variant-numeric:tabular-nums;">
 0.09 (0.008)
@@ -286,6 +285,20 @@ n
 </td>
 </tr>
 </tbody>
+<tfoot>
+<tr>
+<td colspan="5" style="font-size:90%;padding:4px;">
+In the first “All respondents” column, ATE represents responses in T2-T1 for the treatment group compared with the control group for the entire experimental sample. Positive values mean a more politically conservative response. In the “Waits on platform” column, CATEs are the Conditional Average Treatment Effects for persons who said they stand on the platform, rather than wait in their cars. In the second “All respondents” column, T1 levls and SDs for each variable for all respondents. All variables are scaled 0–1.
+</td>
+</tr>
+</tfoot>
+<tfoot>
+<tr>
+<td colspan="4" style="font-size:90%;padding:4px;">
+<sup style="font-style:italic;font-size:65%;"><em>*</em></sup> P values from a one-tailed test against the Null Hypothesis of no effect are in parantheses.<br /><sup style="font-style:italic;font-size:65%;"><em>†</em></sup> Each of the questions allowed responses on a five-point scale ranging from strongly agree to stringly disagree (exact answers were changed to be appropriate to the actual question.
+</td>
+</tr>
+</tfoot>
 </table>
 <!--gt table end-->
 
@@ -326,7 +339,7 @@ Z Score
 <tbody style="border-top-style:solid;border-top-width:2px;border-top-color:#A8A8A8;border-bottom-style:solid;border-bottom-width:2px;border-bottom-color:#A8A8A8;">
 <tr>
 <td style="padding:10px;margin:10px;vertical-align:middle;text-align:left;">
-Liberal<sup style="font-style:italic;font-size:65%;">**</sup>
+Liberal<sup style="font-style:italic;font-size:65%;">†</sup>
 </td>
 <td style="padding:10px;margin:10px;vertical-align:middle;text-align:right;font-variant-numeric:tabular-nums;">
 0.47
@@ -566,7 +579,7 @@ Income
 <tfoot>
 <tr>
 <td colspan="5" style="font-size:90%;padding:4px;">
-<sup style="font-style:italic;font-size:65%;"><em>*</em></sup> Difference in standardized units.<br /><sup style="font-style:italic;font-size:65%;"><em>**</em></sup> Mean response values for the pretreatment variables accounting for stratification into train stations. All variables are 0 and 1 variables, except for Hispanic threat, which is a seven-point scale indicating how threatening respondents find Hispanics, recoded 0–1; residency, which is measured in years; and income, which is annual income in dollars.
+<sup style="font-style:italic;font-size:65%;"><em>*</em></sup> Difference in standardized units.<br /><sup style="font-style:italic;font-size:65%;"><em>†</em></sup> Mean response values for the pretreatment variables accounting for stratification into train stations. All variables are 0 and 1 variables, except for Hispanic threat, which is a seven-point scale indicating how threatening respondents find Hispanics, recoded 0–1; residency, which is measured in years; and income, which is annual income in dollars.
 </td>
 </tr>
 </tfoot>

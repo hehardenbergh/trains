@@ -10,8 +10,6 @@ bibliography: bibliography.bib
 
 Add n row to Table 2.
 
-Make a single table 1.
-
 
 ## Abstract
 
@@ -214,6 +212,21 @@ as_tibble(x = matrix(data = NA_real_,
              V1 = "ATE (P)",
              V2 = "CATE (P)",
              V3 = "T1 levels (SD)") %>% 
+  
+  tab_source_note(source_note = 'In the first "All respondents" column, ATE represents responses in T2-T1 for the treatment group compared with the control group for the entire experimental sample. Positive values mean a more politically conservative response. In the "Waits on platform" column, CATEs are the Conditional Average Treatment Effects for persons who said they stand on the platform, rather than wait in their cars. In the second "All respondents" column, T1 levls and SDs for each variable for all respondents. All variables are scaled 0--1.') %>% 
+  
+  tab_options(footnote.glyph = c("*", "&dagger;")) %>%   
+  
+  tab_footnote(
+    footnote = "P values from a one-tailed test against the Null Hypothesis of no effect are in parantheses.",
+    locations = cells_column_labels(
+      columns = vars(V1))) %>% 
+  
+  tab_footnote(
+    footnote = "Each of the questions allowed responses on a five-point scale ranging from strongly agree to stringly disagree (exact answers were changed to be appropriate to the actual question.",
+    locations = cells_data(
+      columns = vars(question),
+      rows = 1)) %>% 
 
   
   as_raw_html() %>% as.character() %>% cat()
@@ -291,9 +304,9 @@ gt_tbl <- x %>%
              decimals = 0,
              rows = 14) %>% 
   
-  # Take care of the footnotes. Really want the second symbol to be a "dagger."
+  # Take care of the footnotes. 
   
-  tab_options(footnote.glyph = c("*", "**")) %>%   
+  tab_options(footnote.glyph = c("*", "&dagger;")) %>%   
   
   tab_footnote(
     footnote = "Difference in standardized units.",
