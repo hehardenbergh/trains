@@ -36,7 +36,17 @@ library(tidyverse)
 # automatically drop dimensions and become a vector. A tibble requires you to
 # specify drop = TRUE.
 
-dat.all <- read_csv("data/pnas_data.csv")
+dat.all <- read_csv("data/pnas_data.csv") %>% 
+  
+  # Instead of keeping around 90 variables --- many of them garbage? --- let's
+  # just keep the variables we need. Most of these are for Table 2.
+  
+  select(habits, station, treated_unit,
+         numberim.x, Remain.x, Englishlan.x, line.x,
+         numberim.y, Remain.y, Englishlan.y, 
+         treatment, liberal, republican, obama.disapprove, ride.everyday, 
+         voted.2010, romney.voter, Hispanics.x, age, residency.new, college, 
+         male, hispanic.new,  white, income.new)
 
 # There are several other csv files but, as best I can tell, they are only
 # relevant to the supplementary materials.
