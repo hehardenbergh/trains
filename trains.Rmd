@@ -2,11 +2,8 @@
 title: "Replication Report on Enos (2014)"
 author: "David Kane"
 date: '2019-02-15'
-header-includes:
-   - \usepackage{caption}
-   - \usepackage{longtable}
 output:
-  pdf_document: default
+  html_document
 citation_package: natbib
 bibliography: bibliography.bib
 ---
@@ -242,7 +239,7 @@ as_tibble(x = matrix(data = NA_real_,
       rows = 1)) %>% 
 
   
-  as_latex() %>% as.character() %>% cat()
+  as_raw_html() %>% as.character() %>% cat()
 
 # Discuss the confusion about exactly what those numbers mean. Does a high
 # number mean the conservative answer?
@@ -336,7 +333,7 @@ gt_tbl <- x %>%
       columns = vars(condition),
       rows = 1)) 
 
-gt_tbl %>% as_latex() %>% as.character() %>% cat()
+gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
 
 ```
 
