@@ -1,7 +1,6 @@
 ---
 title: "Replication Report on Enos (2014)"
 author: "David Kane"
-date: '2019-02-15'
 output:
   html_document
 citation_package: natbib
@@ -42,8 +41,9 @@ dat.all <- read_csv("data/pnas_data.csv") %>%
   # just keep the variables we need. Most of these are for Table 2.
   
   select(habits, station, treated_unit,
-         numberim.x, Remain.x, Englishlan.x, line.x,
+         numberim.x, Remain.x, Englishlan.x,
          numberim.y, Remain.y, Englishlan.y, 
+         line.x, t.time,
          treatment, liberal, republican, obama.disapprove, ride.everyday, 
          voted.2010, romney.voter, Hispanics.x, age, residency.new, college, 
          male, hispanic.new,  white, income.new)
@@ -51,7 +51,9 @@ dat.all <- read_csv("data/pnas_data.csv") %>%
 # There are several other csv files but, as best I can tell, they are only
 # relevant to the supplementary materials.
 
-# Always nice to do some checks which confirm claims in the article:
+# Always nice to do some checks which confirm claims in the article, although
+# note that, in the analysis, one of the stations is dropped because of a lack
+# of data on the control arm.
 
 stopifnot(length(table(dat.all$station)) == 9)
 
@@ -62,24 +64,34 @@ stopifnot(length(table(dat.all$station)) == 9)
 I am able to replicate all the numbers from Table 1. One clarification is that the values for *n* are somewhat misleading. *n* varies across the questions. For example, *n* for the question about "English as official language?" is 109, as stated. But the *n* for "Number of immigrants be increased" is only 106. It is, obviously, sloppy to list a single *n* when, in fact, *n* varies across questions. The same issue arises with regard to the subset of commuters who wait in the platform. The *n* for "Number of immigrants be increased" is only 98, as compared to the stated 100 for the other two questions. This is a minor point with no meaningful implication for the results.
 
 ```{r table_1}
-# Some comments would be nice!
+# Note how hard it is to grok this code without comments. And, even if you wrote
+# it yourself, it would all be opaque two years from now without comments.
 
-repeats <- c("numberim","Remain","Englishlan")
+# There are three key questions and, for some reason, .x and .y versions of
+# those variables. Why?
 
-x.names <- paste(repeats,".x",sep="")
-y.names <- paste(repeats,".y",sep="")
+repeats <- c("numberim", "Remain", "Englishlan")
+
+x.names <- paste(repeats, ".x", sep = "")
+y.names <- paste(repeats, ".y", sep = "")
+
+# Which train line is definately important. What would happened if we handled this differently?
 
 covariates <- c('line.x')
 
-###treated first
+# final.mat is where we are going to place the results as we loop through.
+
 final.mat <- matrix(nrow = 0, ncol = 8)
 
-subsets <- c('all','no.car')
+# We need to do the same code for both all individuals and for those who wait on
+# the platform (hence "no.car"). By the way, how did they figure out ahead of
+# time about the importance of waiting in cars?
+
+subsets <- c('all', 'no.car')
 
 # This code is absurd. Not the least is using "subset" --- the name of a base
 # function! --- as a character vector. Worth the hour (or more!) it would take
 # to refactor?
-
 
 for(subset in subsets){
 
@@ -108,7 +120,7 @@ for(subset in subsets){
 		dat.subset$y.new <- (dat.subset[, y.names[j], drop = TRUE]- 1)/4  ##rescale y to 0-1
 		dat.subset$Y     <-  dat.subset$y.new - dat.subset$x.new
 		
-		dat.use <- dat.subset[is.na(dat.subset$Y) == F,]
+		dat.use <- dat.subset[is.na(dat.subset$Y) == F, ]
 		
 		x.sd = sd(as.vector(dat.use$x.new),na.rm = T)
 		x.mean = mean(dat.use$x.new,na.rm = T)
@@ -142,14 +154,16 @@ for(subset in subsets){
 		out.mat[j,7] = x.sd
 		out.mat[j,8] = x.mean
 		}
-	final.mat = rbind(final.mat,out.mat)
-	}
+	final.mat = rbind(final.mat, out.mat)
+}
 
-final.mat = as.data.frame(final.mat)
-colnames(final.mat) = c('variable','subset','N','ate','greater.p.value','lesser.p.value','x.sd','x.mean')
+# Clean up the result and save it for later.
+
+final.mat <- as.data.frame(final.mat)
+colnames(final.mat) <- c('variable','subset','N','ate','greater.p.value','lesser.p.value','x.sd','x.mean')
 
 
-final.mat.main = final.mat ##final.mat for output creation later
+final.mat.main <- final.mat 
 
 ```
 
@@ -238,6 +252,10 @@ as_tibble(x = matrix(data = NA_real_,
       columns = vars(question),
       rows = 1)) %>% 
 
+  # Should be possible to replace as_raw_html() with as_latex() and then knit to
+  # PDF. Alas, I can't get it to work. I suspect that gt may be doing some
+  # tricky latex code which the default packages has trouble with. Ought to try
+  # to simplify this to a reproducible example, even dive into the .tex output.
   
   as_raw_html() %>% as.character() %>% cat()
 
@@ -340,6 +358,91 @@ gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
 \newpage
 
 ## Figure 2
+
+```{r figure_2}
+# I used Gabe Walker's work as a guide in completing this figure.
+
+repeats <- c("numberim","Remain","Englishlan")
+
+x.names <- paste(repeats,".x",sep="")
+y.names <- paste(repeats,".y",sep="")
+
+covariates <- c('line.x')
+
+var.names <- c('Number of immigrants be increased?','Children of undocumented be allowed to stay?','English as official language?')
+
+	
+##dose response estimates comparison
+
+final.mat <- matrix(nrow = 0, ncol = 8)
+subsets <- c('ta', 'tb')
+
+
+for(subset in subsets){
+
+	out.mat <- matrix(nrow = length(repeats), ncol = 8)
+	
+	if(subset == 'ta'){
+		dat.subset <- dat.all[dat.all$t.time %in% c('t2a', 't4a'),]
+	}
+	if(subset == 'tb'){
+		dat.subset <- dat.all[dat.all$t.time %in% c('t2b', 't4b'),]
+	}
+	
+	z.variable <- 'treatment'
+	
+	for(j in 1:length(repeats)){
+	  
+	  # We use this (exact?) same code twice. Clean this up! Or do we need to do it
+	  # twice because the universe is different each time and, therefore, the
+	  # rescaling? No! It is an absolute, not relative, rescaling.
+	  
+	  dat.subset$x.new <- (dat.subset[, x.names[j], drop = TRUE]- 1)/4  ##rescale x to 0-1
+		dat.subset$y.new <- (dat.subset[, y.names[j], drop = TRUE]- 1)/4  ##rescale y to 0-1
+		dat.subset$Y <- dat.subset$y.new - dat.subset$x.new
+	
+		dat.use <- dat.subset[is.na(dat.subset$Y) == FALSE, ]
+				
+		x.sd <- sd(dat.use$x.new, na.rm = TRUE)
+		x.mean <- mean(dat.use$x.new, na.rm = TRUE)
+		
+		station.treatment.table <- table(dat.use$station, dat.use[, z.variable, drop = TRUE])
+		
+		no.control.stations = names(which(station.treatment.table[,1] == 0))
+		no.treatment.stations = names(which(station.treatment.table[,2] == 0))
+		dat.use = dat.use[!dat.use$station%in%c(no.control.stations,no.treatment.stations),]
+		
+		dat.use$station = factor(dat.use$station)
+		dat.use$treated_unit = factor(dat.use$treated_unit)
+		Xs = data.matrix(dat.use[,covariates])
+		
+		perms <- genperms(Z = dat.use[,z.variable], blockvar=dat.use$station, clustvar=dat.use$treated_unit)
+		probs = genprobexact(Z = dat.use[,z.variable], blockvar=dat.use$station, clustvar=dat.use$treated_unit)
+		ate = estate(Y = dat.use$Y, Z = dat.use[, z.variable, drop = TRUE], X = Xs, prob = probs)
+		Ys = genouts(Y = dat.use$Y, Z = dat.use[, z.variable, drop = TRUE], ate = ate)
+		distout <- gendist(Ys,perms, prob=probs)
+		disp =	dispdist(distout, ate = ate, display.plot = F)
+		
+		##fill matrix
+		out.mat[j,1] = repeats[j]
+		out.mat[j,2] = subset
+		out.mat[j,3] = nrow(dat.use)
+		out.mat[j,4] = ate
+		out.mat[j,5] = x.mean
+		out.mat[j,6] = x.sd
+		out.mat[j,7] = disp$quantile[1]
+		out.mat[j,8] = disp$quantile[2]
+		}
+		final.mat = rbind(final.mat,out.mat)
+	}
+final.mat = as.data.frame(final.mat)
+colnames(final.mat) = c('variable','subset','N','ate','x.mean','x.sd','quantile.lower','quantile.upper')
+
+final.mat.dose = final.mat ##mat for creating graph later
+
+
+
+```
 
 
 
