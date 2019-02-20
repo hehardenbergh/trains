@@ -2,8 +2,11 @@
 title: "Replication Report on Enos (2014)"
 author: "David Kane"
 date: '2019-02-15'
+header-includes:
+   - \usepackage{caption}
+   - \usepackage{longtable}
 output:
-  html_document: default
+  pdf_document: default
 citation_package: natbib
 bibliography: bibliography.bib
 ---
@@ -11,7 +14,7 @@ bibliography: bibliography.bib
 
 ## Abstract
 
-I replicate "Causal effect of intergroup contact on exclusionary attitudes" (@enos2014) using code/data deposited in the Harvard Dataverse (@DVN/DOP4UB_2017). There are two figures and three tables in the original article. Tables 1 and 2 can be, almost, perfectly replicated. Table 3 and the two figures can not be replicated from the code/data on deposit at the Dataverse.  
+I replicate "Causal effect of intergroup contact on exclusionary attitudes" (@enos2014) using code/data deposited in the Harvard Dataverse (@DVN/DOP4UB_2017). There are two figures and three tables in the original article. Figure 2 and Tables 1 and 2 can be, almost, perfectly replicated. Table 3 and Figure 1 can not be replicated from the code/data on deposit at the Dataverse.  
 
 
 ```{r setup, include=FALSE}
@@ -50,6 +53,10 @@ dat.all <- read_csv("data/pnas_data.csv") %>%
 
 # There are several other csv files but, as best I can tell, they are only
 # relevant to the supplementary materials.
+
+# Always nice to do some checks which confirm claims in the article:
+
+stopifnot(length(table(dat.all$station)) == 9)
 
 ```
 
@@ -235,7 +242,7 @@ as_tibble(x = matrix(data = NA_real_,
       rows = 1)) %>% 
 
   
-  as_raw_html() %>% as.character() %>% cat()
+  as_latex() %>% as.character() %>% cat()
 
 # Discuss the confusion about exactly what those numbers mean. Does a high
 # number mean the conservative answer?
@@ -329,10 +336,13 @@ gt_tbl <- x %>%
       columns = vars(condition),
       rows = 1)) 
 
-gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
+gt_tbl %>% as_latex() %>% as.character() %>% cat()
 
 ```
 
+\newpage
+
+## Figure 2
 
 
 
