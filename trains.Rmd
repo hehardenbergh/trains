@@ -359,7 +359,10 @@ gt_tbl %>% as_raw_html() %>% as.character() %>% cat()
 
 ## Figure 2
 
-```{r figure_2}
+I can replicate Figure 2.
+
+```{r figure_2, fig.cap= "Fig. 2.    Time effects. ATE and 95% confidence intervals for 3-d treatment (solid circle) and 10-d treatment  (open circle). P values from top to bottom generated from a two-tailed test against the Null Hypothesis of no difference in effect between the 3-d and 10-d treatments are P = 0.195, 0.094, and 0.305. n = 55 for 3-d dose and 54 for 10-d dose. Confidence intervals are constructed by drawing the 2.5% and 97.5% quantiles from the randomized distribution."}
+
 # I used Gabe Walker's work as a guide in completing this figure.
 
 repeats <- c("numberim","Remain","Englishlan")
